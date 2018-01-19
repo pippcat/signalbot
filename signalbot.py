@@ -12,7 +12,7 @@
 
 # ToDo:
 # - check for mails in order to send messages back to group
-# - check if SMS support is working properly
+# - add possibility to choose between groups and contacts to be forwarded
 
 import argparse # cli argument parser
 import json # for json handling
