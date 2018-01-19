@@ -120,14 +120,11 @@ def main():
             sendername = msg['sendername_' + str(i)]
             mailtext = "New Signal message from " + str(sendername) + " (" +str(sender) + "), sent " + str(time) + ":\n" + message + "\n\n"
             print("## Message " + str(i) + ":")
-            print(mailtext)
-            print(type(mailtext))
             print("## end of message")
             if 'attachment_' + str(i) in msg:
                 attachment = msg['attachment_' + str(i)]
             else:
                 attachment = ""
-            print(attachment)
             # send sms if activated:
             if sendsms == True:
                 print("Signalbot is sending SMS")
@@ -145,8 +142,6 @@ def main():
             # send mail if activated:
             if sendmail == True:
                 print("Signalbot is sending emails")
-                print(to_addr_list)
-                print(type(to_addr_list))
                 sendemail(from_addr    = mailfrom,
                       to_addr_list = to_addr_list,
                       subject      = mailsubject,
@@ -273,7 +268,6 @@ def messagehandler(file):
                         if debug: print("DEBUG - messagehandler() - Message " + str(i) +" - Attachment: none")
                         jattachmentfile = '0'
 
-                    print("")
                 else:
                     print("Signalbot did not find new messages to send, aborting!")
         else:
@@ -293,7 +287,7 @@ def sendemail(from_addr, to_addr_list, subject, message, attachment, login, pass
     if attachment != "": # only if we really have an attachment..
         # .. try to find out MIME type and process it properly
         ctype, encoding = mimetypes.guess_type(attachment)
-        print(attachment)
+        #print(attachment)
         if ctype is None or encoding is not None:
             ctype = "application/octet-stream"
 
