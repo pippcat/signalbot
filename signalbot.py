@@ -12,8 +12,7 @@
 
 # ToDo:
 # - check for mails in order to send messages back to group
-# - Signal-Emoji-Support / UTF-8 parsing
-# - atm only first
+# - check if SMS support is working properly
 
 import argparse # cli argument parser
 import json # for json handling
@@ -68,7 +67,7 @@ parser=argparse.ArgumentParser(
     description='''Signalbot is a Python script which can send Signal messages via Email and/or SMS (using www.clockworksms.com API).
     It's relying on signal-cli (https://github.com/AsamK/signal-cli) to fetch the actual messages.
     Configuration is done in config.ini and should be self explanatory.''',
-    #epilog="""""")
+    epilog="""""")
 parser.add_argument("--mail", action="store_true", help="override config and send mail")
 parser.add_argument("--nomail", action="store_true", help="override config and do not send mail")
 parser.add_argument("--fetch", action="store_true", help="override config and fetch new signal messages")
@@ -120,6 +119,7 @@ def main():
             sendername = msg['sendername_' + str(i)]
             mailtext = "New Signal message from " + str(sendername) + " (" +str(sender) + "), sent " + str(time) + ":\n" + message + "\n\n"
             print("## Message " + str(i) + ":")
+            print(message)
             print("## end of message")
             if 'attachment_' + str(i) in msg:
                 attachment = msg['attachment_' + str(i)]
