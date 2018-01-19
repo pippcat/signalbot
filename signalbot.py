@@ -2,7 +2,7 @@
 # coding: UTF-8
 
 # Signal-To-SMS-or-Mail-Bot
-# Author: Tommy Schönherr (tommy.schoenherr@posteo.de)
+# Author: pippcat (sendyourspamhere+github@posteo.de)
 # Changelog:
 # 0.5 - fixed unicode fuckup
 # 0.4 - included check for maximum attachment size
@@ -68,7 +68,7 @@ parser=argparse.ArgumentParser(
     description='''Signalbot is a Python script which can send Signal messages via Email and/or SMS (using www.clockworksms.com API).
     It's relying on signal-cli (https://github.com/AsamK/signal-cli) to fetch the actual messages.
     Configuration is done in config.ini and should be self explanatory.''',
-    epilog="""Please report bugs via mail to tommy.schoenherr@posteo.de""")
+    #epilog="""""")
 parser.add_argument("--mail", action="store_true", help="override config and send mail")
 parser.add_argument("--nomail", action="store_true", help="override config and do not send mail")
 parser.add_argument("--fetch", action="store_true", help="override config and fetch new signal messages")
