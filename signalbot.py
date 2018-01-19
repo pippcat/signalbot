@@ -29,6 +29,8 @@ from email.mime.base import MIMEBase # for sending mails
 from email.mime.image import MIMEImage # for sending mails
 from email.mime.text import MIMEText # for sending mails
 import sys # for file access
+reload(sys) # for unicode fuckup
+sys.setdefaultencoding('utf-8') # this as well
 import time # for timestamps
 from clockwork import clockwork # for sending SMS using www.clockworksms.com
 import fileinput # for mime detection and renaming
@@ -93,8 +95,6 @@ if args.noemptydb: emptydb = False
 
 # main program:
 def main():
-    print("fuck!")
-    print(to_addr_list)
     if debug: print("DEBUG - main(): called")
     print("Signalbot v" + version + ", Timestamp: " + str(datetime.now()))
     print("Switch settings: Debug = " + str(debug) + ", getsignalmessages = " + str(getsignalmessages) + ", sendmail = " + str(sendmail) + ", sendsms = " + str(sendsms) + ", emptydb = " + str(emptydb))
@@ -127,17 +127,26 @@ def main():
                 attachment = ""
             # send sms if activated:
             if sendsms == True:
-                print("Signalbot is sending SMS")
+                sms_rec_list = str(sms_receivers).split(",")
                 api = clockwork.API(clockworkapikey)
-                message = clockwork.SMS(
-                    to = ','.join(sms_receivers),
-                    message = msg)
-                response = api.send(message)
-                if response.success:
-                    print (response.id)
-                else:
-                    print (response.error_code)
-                    print (response.error_message)
+                print time
+                smsmsg = sendername + ", " + unicode(time) + ": " + message
+                # unic = u''
+                # unic += smsmsg
+                # smsmsg = unic
+                print smsmsg
+                print(type(smsmsg))
+                for s in sms_rec_list:
+                    message = clockwork.SMS(
+                        to = s,
+                        message = smsmsg)
+                        #message = sendername.encode('utf-8') + ", " + str(time) + ": " + message.encode('utf-8'))
+                    response = api.send(message)
+                    if response.success:
+                        print (response.id)
+                    else:
+                        print (response.error_code)
+                        print (response.error_message)
 
             # send mail if activated:
             if sendmail == True:
