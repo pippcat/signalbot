@@ -11,8 +11,9 @@
 # 0.1 - first quick and dirty implementation
 
 # ToDo:
-# - check for mails in order to send messages back to group
-# - add possibility to choose between groups and contacts to be forwarded
+# - check for incoming mails or sms in order to send messages back to group
+# - add possibility to choose between (multiple) groups and contacts to be forwarded
+# - check message length and split into multiple sms if necessary
 
 import argparse # cli argument parser
 import json # for json handling
