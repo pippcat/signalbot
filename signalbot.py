@@ -290,7 +290,7 @@ def sendemail(from_addr, to_addr_list, subject, message, attachment, login, pass
     if debug: print("DEBUG - sendemail(): called")
     msg = MIMEMultipart()
     msg["From"] = from_addr
-    msg["To"] = to_addr_list#.split(",") # expecting string but we have a list of recipients
+    msg["To"] = to_addr_list
     msg["Subject"] = subject
     msg.attach(MIMEText(message, 'plain', 'utf-8'))
     if attachment != "": # only if we really have an attachment..
@@ -328,7 +328,7 @@ def sendemail(from_addr, to_addr_list, subject, message, attachment, login, pass
     server = smtplib.SMTP(server)
     server.starttls()
     server.login(login,password)
-    server.sendmail(from_addr, to_addr_list, msg.as_string())
+    server.sendmail(from_addr, to_addr_list.split(','), msg.as_string())
     server.quit()
     if debug: print("DEBUG - sendemail(): finished")
 
