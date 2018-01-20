@@ -1,20 +1,6 @@
 #!/usr/bin/env python
 # coding: UTF-8
 
-# Signal-To-SMS-or-Mail-Bot
-# Author: pippcat (sendyourspamhere+github@posteo.de)
-# Changelog:
-# 0.5 - fixed unicode fuckup
-# 0.4 - included check for maximum attachment size
-# 0.3 - included contact names
-# 0.2 - now with config.ini
-# 0.1 - first quick and dirty implementation
-
-# ToDo:
-# - check for incoming mails or sms in order to send messages back to group
-# - add possibility to choose between (multiple) groups and contacts to be forwarded
-# - check message length and split into multiple sms if necessary
-
 import argparse # cli argument parser
 import json # for json handling
 import configparser # for config file
