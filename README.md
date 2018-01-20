@@ -10,25 +10,16 @@ This script is pretty untested and therefore results may vary. Feel free to try 
 
 You may pass the following arguments to signalbot.py to overwrite defaults set in config.ini:
 
-`--mail` override config and send mail
-
-`--nomail` override config and do not send mail
-
-`--sms` override config and send SMS
-
-`--nosms` override config and do not send SMS
-
-`--fetch` override config and fetch new signal messages
-
-`--nofetch` override config and do not fetch new signal messages
-
-`--debug` override config and switch on debug mode
-
-`--nodebug` override config and switch off debug mode
-
-`--emptydb` override config and delete message database after processing
-
-`--noemptydb` override config and keep message database after processing
+- `--mail` override config and send mail
+- `--nomail` override config and do not send mail
+- `--sms` override config and send SMS
+- `--nosms` override config and do not send SMS
+- `--fetch` override config and fetch new signal messages
+- `--nofetch` override config and do not fetch new signal messages
+- `--debug` override config and switch on debug mode
+- `--nodebug` override config and switch off debug mode
+- `--emptydb` override config and delete message database after processing
+- `--noemptydb` override config and keep message database after processing
 
 ## ToDos
 
@@ -38,8 +29,8 @@ You may pass the following arguments to signalbot.py to overwrite defaults set i
 
 
 ## Changelog
-0.5 - fixed unicode fuckup
-0.4 - included check for maximum attachment size
-0.3 - included contact names
-0.2 - now with config.ini
-0.1 - first quick and dirty implementation
+- 0.5 - fixed unicode fuckup
+- 0.4 - included check for maximum attachment size
+- 0.3 - included contact names
+- 0.2 - now with config.ini
+- 0.1 - first quick and dirty implementation
