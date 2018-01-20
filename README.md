@@ -24,7 +24,7 @@ You may pass the following arguments to signalbot.py to overwrite defaults set i
 ## ToDos
 
 - check for incoming mails or sms in order for recipients to be able to send messages back to group
-- add possibility to choose between (multiple) groups and contacts to be forwarded to multiple recipients
+- add possibility to choose between (multiple) groups and contacts to be forwarded to different recipients
 - check message length and split into multiple sms if necessary
 
 
