@@ -26,7 +26,7 @@ You may pass the following arguments to signalbot.py to overwrite defaults set i
 - check for incoming mails or sms in order for recipients to be able to send messages back to group
 - add possibility to choose between (multiple) groups and contacts to be forwarded to different recipients
 - check message length and split into multiple sms if necessary
-
+- Date is missing in mail header
 
 ## Changelog
 - 0.5 - fixed unicode fuckup
