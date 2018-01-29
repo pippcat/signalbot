@@ -6,10 +6,12 @@ import json # for json handling
 import configparser # for config file
 from shutil import copyfile
 from datetime import datetime # for decoding timestamps
+import time
 import smtplib # for sending mails
 import mimetypes # for sending mails
 from email.mime.multipart import MIMEMultipart # for sending mails
 from email import encoders # for sending mails
+from email.utils import formatdate # formating date of mails
 from email.message import Message # for sending mails
 from email.mime.audio import MIMEAudio # for sending mails
 from email.mime.base import MIMEBase # for sending mails
@@ -101,7 +103,7 @@ def main():
         if 'sender_' + str(i) in msg:
             newmessage = True
             sender = msg['sender_' + str(i)]
-            time = msg['time_' + str(i)]
+            timestamp = msg['time_' + str(i)]
             message = msg['message_' + str(i)]
             sendername = msg['sendername_' + str(i)]
             mailtext = "New Signal message from " + str(sendername) + " (" +str(sender) + "), sent " + str(time) + ":\n" + message + "\n\n"
@@ -118,9 +120,6 @@ def main():
                 api = clockwork.API(clockworkapikey)
                 print time
                 smsmsg = sendername + ", " + unicode(time) + ": " + message
-                # unic = u''
-                # unic += smsmsg
-                # smsmsg = unic
                 print smsmsg
                 print(type(smsmsg))
                 for s in sms_rec_list:
@@ -143,6 +142,7 @@ def main():
                       subject      = mailsubject,
                       message      = mailtext.encode("utf-8"),
                       attachment   = attachment,
+                      timestamp    = timestamp,
                       login        = smtpuser,
                       password     = smtppassword,
                       server       = smtpserver)
@@ -273,12 +273,14 @@ def messagehandler(file):
     return message
 
 # function handles sending of emails
-def sendemail(from_addr, to_addr_list, subject, message, attachment, login, password, server):
+def sendemail(from_addr, to_addr_list, subject, message, attachment, timestamp, login, password, server):
     if debug: print("DEBUG - sendemail(): called")
     msg = MIMEMultipart()
     msg["From"] = from_addr
     msg["To"] = to_addr_list
     msg["Subject"] = subject
+    # formating timestamp for mail header:
+    msg["Date"] = formatdate(time.mktime(timestamp.timetuple()))
     msg.attach(MIMEText(message, 'plain', 'utf-8'))
     if attachment != "": # only if we really have an attachment..
         # .. try to find out MIME type and process it properly
