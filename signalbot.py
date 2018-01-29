@@ -9,8 +9,8 @@ import datetime # for decoding timestamps
 import time # for timestamp formating / modification
 import smtplib # for sending mails
 import mimetypes # for sending mails
-import email # for sending mails
-#from email.message import Message # for sending mails
+import email # for sending and reveiving mails
+import imapclient # for sending mails
 import sys # for file access
 reload(sys) # because of unicode fuckup
 sys.setdefaultencoding('utf-8') # this as well
@@ -29,6 +29,7 @@ getsignalmessages = config['SWITCHES'].getboolean('getsignalmessages')
 sendmail = config['SWITCHES'].getboolean('sendmail')
 sendsms = config['SWITCHES'].getboolean('sendsms')
 emptydb = config['SWITCHES'].getboolean('emptydb')
+getmail = config['SWITCHES'].getboolean('getmail')
 signalnumber = config['SIGNAL']['signalnumber']
 signalgroupid = config['SIGNAL']['signalgroupid']
 signal_cli_path = config['SIGNAL']['signal_cli_path']
@@ -36,10 +37,11 @@ signalmsgdb = config['SIGNAL']['signalmsgdb']
 attachmentpath = config['SIGNAL']['attachmentpath']
 mailfrom = config['MAIL']['mailfrom']
 mailsubject = config['MAIL']['mailsubject']
-to_addr_list = config['MAIL']['to_addr_list']
+addr_list = config['MAIL']['addr_list']
 smtpserver = config['MAIL']['smtpserver']
-smtpuser = config['MAIL']['smtpuser']
-smtppassword = config['MAIL']['smtppassword']
+imapserver = config['MAIL']['imapserver']
+mailuser = config['MAIL']['mailuser']
+mailpassword = config['MAIL']['mailpassword']
 max_attachmentsize = config['MAIL']['max_attachmentsize']
 sms_receivers = config['SMS']['sms_receivers']
 clockworkapikey = config['SMS']['clockworkapikey']
@@ -52,34 +54,38 @@ parser=argparse.ArgumentParser(
     It's relying on signal-cli (https://github.com/AsamK/signal-cli) to fetch the actual messages.
     Configuration is done in config.ini and should be self explanatory.''',
     epilog="""""")
-parser.add_argument("--mail", action="store_true", help="override config and send mail")
-parser.add_argument("--nomail", action="store_true", help="override config and do not send mail")
+parser.add_argument("--sendmail", action="store_true", help="override config and send mail")
+parser.add_argument("--notsendmail", action="store_true", help="override config and do not send mail")
 parser.add_argument("--fetch", action="store_true", help="override config and fetch new signal messages")
-parser.add_argument("--nofetch", action="store_true", help="override config and do not fetch new signal messages")
+parser.add_argument("--notfetch", action="store_true", help="override config and do not fetch new signal messages")
 parser.add_argument("--sms",  action="store_true", help="override config and send SMS")
-parser.add_argument("--nosms", action="store_true", help="override config and do not send SMS")
+parser.add_argument("--notsms", action="store_true", help="override config and do not send SMS")
 parser.add_argument("--debug", action="store_true", help="override config and switch on debug mode")
-parser.add_argument("--nodebug", action="store_true", help="override config and switch off debug mode")
+parser.add_argument("--notdebug", action="store_true", help="override config and switch off debug mode")
 parser.add_argument("--emptydb", action="store_true", help="override config and delete message database after processing")
-parser.add_argument("--noemptydb", action="store_true", help="override config and keep message database after processing")
+parser.add_argument("--notemptydb", action="store_true", help="override config and keep message database after processing")
+parser.add_argument("--getmail", action="store_true", help="override config and send email responses to group")
+parser.add_argument("--notgetmail", action="store_true", help="override config and do not send email responses to group")
 args=parser.parse_args()
 # override config if asked to do so:
-if args.mail: sendmail = True
-if args.nomail: sendmail = False
+if args.sendmail: sendmail = True
+if args.notsendmail: sendmail = False
 if args.sms: sendsms = True
-if args.nosms: sendsms = False
+if args.notsms: sendsms = False
 if args.fetch: getsignalmessages = True
-if args.nofetch: getsignalmessages = False
+if args.notfetch: getsignalmessages = False
 if args.debug: debug = True
-if args.nodebug: debug = False
+if args.notdebug: debug = False
 if args.emptydb: emptydb = True
-if args.noemptydb: emptydb = False
+if args.notemptydb: emptydb = False
+if args.getmail: getmail = True
+if args.notgetmail: getmail = False
 
 # main program:
 def main():
     if debug: print("DEBUG - main(): called")
     print("Signalbot v" + version + ", Timestamp: " + str(datetime.datetime.now()))
-    print("Switch settings: Debug = " + str(debug) + ", getsignalmessages = " + str(getsignalmessages) + ", sendmail = " + str(sendmail) + ", sendsms = " + str(sendsms) + ", emptydb = " + str(emptydb))
+    print("Switch settings: Debug = " + str(debug) + ", getsignalmessages = " + str(getsignalmessages) + ", sendmail = " + str(sendmail) + ", sendsms = " + str(sendsms) + ", emptydb = " + str(emptydb) + ", getmail = " + str(getmail))
     # get new signal messages:
     if getsignalmessages == True:
         print("Signalbot is checking for new messages")
@@ -107,37 +113,22 @@ def main():
                 attachment = msg['attachment_' + str(i)]
             else:
                 attachment = ""
+
             # send sms if activated:
             if sendsms == True:
-                sms_rec_list = str(sms_receivers).split(",")
-                api = clockwork.API(clockworkapikey)
-                print time
-                smsmsg = sendername + ", " + unicode(time) + ": " + message
-                print smsmsg
-                print(type(smsmsg))
-                for s in sms_rec_list:
-                    message = clockwork.SMS(
-                        to = s,
-                        message = smsmsg)
-                        #message = sendername.encode('utf-8') + ", " + str(time) + ": " + message.encode('utf-8'))
-                    response = api.send(message)
-                    if response.success:
-                        print (response.id)
-                    else:
-                        print (response.error_code)
-                        print (response.error_message)
+                smssender(sendername, time, message)
 
             # send mail if activated:
             if sendmail == True:
                 print("Signalbot is sending emails")
                 sendemail(from_addr    = mailfrom,
-                      to_addr_list = to_addr_list,
+                      addr_list = addr_list,
                       subject      = mailsubject,
                       message      = mailtext.encode("utf-8"),
                       attachment   = attachment,
                       timestamp    = timestamp,
-                      login        = smtpuser,
-                      password     = smtppassword,
+                      login        = mailuser,
+                      password     = mailpassword,
                       server       = smtpserver)
 
             # deleting attachment if necessary:
@@ -149,6 +140,10 @@ def main():
     if emptydb == True:
         f = open(os.path.dirname(__file__) + '/out', 'w')
         f.close()
+
+    # check for responses via mail:
+    if getmail == True:
+        getresponse()
     if debug: print("DEBUG - main(): finished")
 
 # Signal stores files without extension, we change that using the following function
@@ -265,11 +260,11 @@ def messagehandler(file):
     return message
 
 # function handles sending of emails
-def sendemail(from_addr, to_addr_list, subject, message, attachment, timestamp, login, password, server):
+def sendemail(from_addr, addr_list, subject, message, attachment, timestamp, login, password, server):
     if debug: print("DEBUG - sendemail(): called")
     msg = email.MIMEMultipart.MIMEMultipart()
     msg["From"] = from_addr
-    msg["To"] = to_addr_list
+    msg["To"] = addr_list
     msg["Subject"] = subject
     # formating timestamp for mail header:
     msg["Date"] = email.utils.formatdate(time.mktime(timestamp.timetuple()))
@@ -309,9 +304,76 @@ def sendemail(from_addr, to_addr_list, subject, message, attachment, timestamp, 
     server = smtplib.SMTP(server)
     server.starttls()
     server.login(login,password)
-    server.sendmail(from_addr, to_addr_list.split(','), msg.as_string())
+    server.sendmail(from_addr, addr_list.split(','), msg.as_string())
     server.quit()
     if debug: print("DEBUG - sendemail(): finished")
+
+# Sending SMS:
+def smssender(sendername, time, message):
+    print("Signalbot is sending SMS")
+    sms_rec_list = str(sms_receivers).split(",")
+    api = clockwork.API(clockworkapikey)
+    smsmsg = sendername + ", " + unicode(time) + ": " + message
+    for s in sms_rec_list:
+        message = clockwork.SMS(
+            to = s,
+            message = smsmsg)
+            #message = sendername.encode('utf-8') + ", " + str(time) + ": " + message.encode('utf-8'))
+        response = api.send(message)
+        if response.success:
+            print (response.id)
+        else:
+            print (response.error_code)
+            print (response.error_message)
+
+# looking for mail responses to send to group:
+def getresponse():
+    print("Signalbot is looking for mail responses")
+    server = imapclient.IMAPClient(imapserver, ssl=True)
+    try:
+        server.login(mailuser, mailpassword)
+    except c.Error, e:
+        print 'Could not log in:', e
+        sys.exit(1)
+
+    # maybe implement to choose other folder?
+    select_info = server.select_folder('INBOX')
+    #print('%d messages in INBOX' % select_info[b'EXISTS'])
+    msgdict = server.fetch('1:*', ['BODY.PEEK[]'])
+    signal = ""
+    for message_id, message in msgdict.items():
+        e = email.message_from_string(message['BODY[]'])
+        nicetime = dt_parse(e['Date'])
+        sender = email.Header.decode_header(e['From'])
+        signal += "At " + str(nicetime) + " " + sender[0][0]
+        if len(sender) == 2: # don't lose important information!
+            signal += " " + sender[1][0]
+        signal += " wrote:\n"
+        payload = e.get_payload()
+        if isinstance(payload, list):
+            for i in payload:
+                ctype = i.get_content_type()
+                if ctype == "text/plain":
+                    signal += i.get_payload()
+                if ctype in ['image/jpeg', 'image/png', 'image/gif']:
+                    attachmentfile = i.get_filename()
+                    print("attachment stored to " + attachmentfile)
+                    open(attachmentfile, 'wb').write(i.get_payload(decode=True))
+        else:
+            signal += payload
+        signal += "\n\n"
+    #os.system(signal_cli_path + ' -u ' + signalnumber + ' send -m "' + signal.encode('utf-8') + '" -g ' + signalgroupid) # + ' -a /home/pi/bin/signalbot_testing/lueftung.png')
+    print("Found new mails. The following message will be sent to group:\n")
+    print(signal.encode('utf-8'))
+
+# this is a ugly workaround to convert timestamps in python > 3.2, see https://stackoverflow.com/questions/26165659/python-timezone-z-directive-for-datetime-strptime-not-available#26177579
+def dt_parse(t):
+    ret = datetime.datetime.strptime(t[0:24],'%a, %d %b %Y %H:%M:%S') #e.g: Fri, 26 Jan 2018 12:36:52 +0100
+    if t[26]=='+':
+        ret-=datetime.timedelta(hours=int(t[27:29]),minutes=int(t[29:]))
+    elif t[26]=='-':
+        ret+=datetime.timedelta(hours=int(t[27:29]),minutes=int(t[29:]))
+    return ret
 
 if __name__ == '__main__':
     main()

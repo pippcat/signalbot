@@ -2,6 +2,10 @@
 
 Signalbot is a Python script which can send Signal messages via Email and/or SMS (using www.clockworksms.com API). It's relying on signal-cli (https://github.com/AsamK/signal-cli) to fetch the actual messages. Configuration is done in by renaming config_default.ini to config.ini and modifying it.
 
+## Response branch
+
+Email recipients should be able to answer to the signalbot in order for him to pipe the answer back to the group. That's what this branch tries to accomplish. It doesn't work very good yet, though..
+
 ## Warning
 
 This script is only tested on a Raspberry Pi 2 running Raspbian Jessie and Python 2.7.9. Your results may vary. Feel free to try and help me improve it.
@@ -11,15 +15,17 @@ This script is only tested on a Raspberry Pi 2 running Raspbian Jessie and Pytho
 You may pass the following arguments to signalbot.py to overwrite defaults set in config.ini:
 
 - `--mail` override config and send mail
-- `--nomail` override config and do not send mail
+- `--notmail` override config and do not send mail
 - `--sms` override config and send SMS
-- `--nosms` override config and do not send SMS
+- `--notsms` override config and do not send SMS
 - `--fetch` override config and fetch new signal messages
-- `--nofetch` override config and do not fetch new signal messages
+- `--notfetch` override config and do not fetch new signal messages
+- `--getmail` override config and send email responses to group
+- `--notgetmail` override config and do not send email responses to group
 - `--debug` override config and switch on debug mode
-- `--nodebug` override config and switch off debug mode
+- `--notdebug` override config and switch off debug mode
 - `--emptydb` override config and delete message database after processing
-- `--noemptydb` override config and keep message database after processing
+- `--notemptydb` override config and keep message database after processing
 
 ## Known bugs
 
