@@ -4,23 +4,16 @@
 import argparse # cli argument parser
 import json # for json handling
 import configparser # for config file
-from shutil import copyfile
-from datetime import datetime # for decoding timestamps
-import time
+import shutil # for copying files
+import datetime # for decoding timestamps
+import time # for timestamp formating / modification
 import smtplib # for sending mails
 import mimetypes # for sending mails
-from email.mime.multipart import MIMEMultipart # for sending mails
-from email import encoders # for sending mails
-from email.utils import formatdate # formating date of mails
-from email.message import Message # for sending mails
-from email.mime.audio import MIMEAudio # for sending mails
-from email.mime.base import MIMEBase # for sending mails
-from email.mime.image import MIMEImage # for sending mails
-from email.mime.text import MIMEText # for sending mails
+import email # for sending mails
+#from email.message import Message # for sending mails
 import sys # for file access
-reload(sys) # for unicode fuckup
+reload(sys) # because of unicode fuckup
 sys.setdefaultencoding('utf-8') # this as well
-import time # for timestamps
 from clockwork import clockwork # for sending SMS using www.clockworksms.com
 import fileinput # for mime detection and renaming
 import mimetypes # for mime detection and renaming
@@ -85,7 +78,7 @@ if args.noemptydb: emptydb = False
 # main program:
 def main():
     if debug: print("DEBUG - main(): called")
-    print("Signalbot v" + version + ", Timestamp: " + str(datetime.now()))
+    print("Signalbot v" + version + ", Timestamp: " + str(datetime.datetime.now()))
     print("Switch settings: Debug = " + str(debug) + ", getsignalmessages = " + str(getsignalmessages) + ", sendmail = " + str(sendmail) + ", sendsms = " + str(sendsms) + ", emptydb = " + str(emptydb))
     # get new signal messages:
     if getsignalmessages == True:
@@ -106,7 +99,7 @@ def main():
             timestamp = msg['time_' + str(i)]
             message = msg['message_' + str(i)]
             sendername = msg['sendername_' + str(i)]
-            mailtext = "New Signal message from " + str(sendername) + " (" +str(sender) + "), sent " + str(time) + ":\n" + message + "\n\n"
+            mailtext = "New Signal message from " + str(sendername) + " (" +str(sender) + "), sent " + str(timestamp) + ":\n" + message + "\n\n"
             print("## Message " + str(i) + ":")
             print(message)
             print("## end of message")
@@ -161,7 +154,7 @@ def main():
 # Signal stores files without extension, we change that using the following function
 def addfileextension(attachmentpath, attachmentname):
     if debug: print("DEBUG - addfileextension(): called")
-    copyfile(attachmentpath + attachmentname, attachmentname)
+    shutil.copyfile(attachmentpath + attachmentname, attachmentname)
     while True:
         try:
             output2, _ = Popen(['file', '-bi', attachmentname], stdout=PIPE).communicate()
@@ -219,7 +212,7 @@ def messagehandler(file):
                     # {u'envelope': {u'callMessage': None, u'relay': None, u'timestamp': 1516112508515L, u'sourceDevice': 3, u'syncMessage': None, u'source': u'+4915773820452', u'isReceipt': False, u'dataMessage': {u'expiresInSeconds': 0, u'timestamp': 1516112508515L, u'message': u'Hier, ein Bild!', u'groupInfo': None, u'attachments': [{u'contentType': u'image/jpeg', u'id': 6987400019698322768L, u'size': 488025}]}}}
 
                     # timestamp includes milliseconds, we have to strip them:
-                    jtime = datetime.utcfromtimestamp(float(str(jfile['envelope']['timestamp'])[0:-3]))
+                    jtime = datetime.datetime.utcfromtimestamp(float(str(jfile['envelope']['timestamp'])[0:-3]))
                     message['time_' + str(i)] = jtime
                     if debug: print("DEBUG - messagehandler() - Message " + str(i) +" - Time sent: " + str(jtime))
 
@@ -236,7 +229,6 @@ def messagehandler(file):
                     jmessage = jfile['envelope']['dataMessage']['message']#.decode('cp1252').encode("utf-8")
                     if debug: print("DEBUG - messagehandler() - Message " + str(i) +" - Message: " + u''.join(jmessage).encode('utf-8')) # emoji encoding is complicated
                     message['message_' + str(i)] = jmessage
-                    #message['message_' + str(i)] = u''.join(jmessage).encode('utf-8')
                     # insert info if message is empty:
                     if message['message_' + str(i)] == '':
                         message['message_' + str(i)] = "### nothing to display, message was empty ###"
@@ -275,17 +267,17 @@ def messagehandler(file):
 # function handles sending of emails
 def sendemail(from_addr, to_addr_list, subject, message, attachment, timestamp, login, password, server):
     if debug: print("DEBUG - sendemail(): called")
-    msg = MIMEMultipart()
+    msg = email.MIMEMultipart.MIMEMultipart()
     msg["From"] = from_addr
     msg["To"] = to_addr_list
     msg["Subject"] = subject
     # formating timestamp for mail header:
-    msg["Date"] = formatdate(time.mktime(timestamp.timetuple()))
-    msg.attach(MIMEText(message, 'plain', 'utf-8'))
+    msg["Date"] = email.utils.formatdate(time.mktime(timestamp.timetuple()))
+    # attaching the actual message:
+    msg.attach(email.MIMEText.MIMEText(message, 'plain', 'utf-8'))
     if attachment != "": # only if we really have an attachment..
         # .. try to find out MIME type and process it properly
         ctype, encoding = mimetypes.guess_type(attachment)
-        #print(attachment)
         if ctype is None or encoding is not None:
             ctype = "application/octet-stream"
 
@@ -294,22 +286,22 @@ def sendemail(from_addr, to_addr_list, subject, message, attachment, timestamp, 
         if maintype == "text":
             fp = open(attachment)
             # Note: we should handle calculating the charset
-            attachm = MIMEText(fp.read(), _subtype=subtype)
+            attachm = email.MIMEText.MIMEText(fp.read(), _subtype=subtype)
             fp.close()
         elif maintype == "image":
             fp = open(attachment, "rb")
-            attachm = MIMEImage(fp.read(), _subtype=subtype)
+            attachm = email.MIMEImage.MIMEImage(fp.read(), _subtype=subtype)
             fp.close()
         elif maintype == "audio":
             fp = open(attachment, "rb")
-            attachm = MIMEAudio(fp.read(), _subtype=subtype)
+            attachm = email.MIMEAudio.MIMEAudio(fp.read(), _subtype=subtype)
             fp.close()
         else:
             fp = open(attachment, "rb")
-            attachm = MIMEBase(maintype, subtype)
+            attachm = email.MIMEBase.MIMEBase(maintype, subtype)
             attachm.set_payload(fp.read())
             fp.close()
-            encoders.encode_base64(attachm)
+            email.encoders.encode_base64(attachm)
         attachm.add_header("Content-Disposition", "attachment", filename=attachment)
         msg.attach(attachm)
 

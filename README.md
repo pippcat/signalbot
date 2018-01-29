@@ -4,7 +4,7 @@ Signalbot is a Python script which can send Signal messages via Email and/or SMS
 
 ## Warning
 
-This script is pretty untested and therefore results may vary. Feel free to try and help me improve it.
+This script is only tested on a Raspberry Pi 2 running Raspbian Jessie and Python 2.7.9. Your results may vary. Feel free to try and help me improve it.
 
 ## CLI arguments
 
@@ -21,6 +21,10 @@ You may pass the following arguments to signalbot.py to overwrite defaults set i
 - `--emptydb` override config and delete message database after processing
 - `--noemptydb` override config and keep message database after processing
 
+## Known bugs
+
+- SMS module doesn't check for length of messages
+
 ## ToDos
 
 - check for incoming mails or sms in order for recipients to be able to send messages back to group
@@ -28,8 +32,11 @@ You may pass the following arguments to signalbot.py to overwrite defaults set i
 - check message length and split into multiple sms if necessary
 
 ## Changelog
-- 0.5 - fixed unicode fuckup
-- 0.4 - included check for maximum attachment size
-- 0.3 - included contact names
-- 0.2 - now with config.ini
-- 0.1 - first quick and dirty implementation
+
+- 0.5.2 - code clean up
+- 0.5.1 - added timestamp to mail header
+- 0.5   - fixed unicode fuckup
+- 0.4   - included check for maximum attachment size
+- 0.3   - included contact names
+- 0.2   - now with config.ini
+- 0.1   - first quick and dirty implementation
