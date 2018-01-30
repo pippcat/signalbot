@@ -403,12 +403,12 @@ def getmail(signalgroupid, signalnumber, deletemail):
 
     # take care of messages afterwards:
     if deletemail == True: # delete mail after processing if asked to do so:
-        for id in result:
+        for id in matching:
             server.delete_messages(id)
             server.expunge()
         print("Deleted mails from server.")
     else: # otherwise add the flagged flag to mark that message has been processed:
-        for id in result:
+        for id in matching:
             server.add_flags(id, ['\\FLAGGED'])
         print("Flagged mails on server.")
 
@@ -416,7 +416,7 @@ def getmail(signalgroupid, signalnumber, deletemail):
     if signal != "":
         print("Signalbot is asking signal_cli to send the message to the group, be patient ..")
         if attachmentlist == []: # if we don't have attachments
-            os.system(signal_cli_path + ' -u ' + signalnumber + ' send -m "' + signal.encode('utf-8') + '" -g ' + signalgroupid) # + ' -a /home/pi/bin/signalbot_testing/lueftung.png')
+            os.system(signal_cli_path + ' -u ' + signalnumber + ' send -m "' + signal.encode('utf-8') + '" -g ' + signalgroupid)
             print(".. done.")
         else: # if we have attachments send them, then delete them.
             os.system(signal_cli_path + ' -u ' + signalnumber + ' send -m "' + signal.encode('utf-8') + '" -g ' + signalgroupid + ' -a ' + ' '.join(attachmentlist))
