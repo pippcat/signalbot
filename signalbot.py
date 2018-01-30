@@ -54,7 +54,7 @@ parser=argparse.ArgumentParser(
     description='''Signalbot is a Python script which can send Signal messages via Email and/or SMS (using www.clockworksms.com API).
     It's relying on signal-cli (https://github.com/AsamK/signal-cli) to fetch the actual messages.
     Configuration is done in config.ini and should be self explanatory.''',
-    epilog="""""")
+    epilog="""Please be aware that this software isn't well tested. It works for a specific usecase on a Raspberry Pi 2 running Raspbian """)
 parser.add_argument("--sendmail", action="store_true", help="override config and send mail")
 parser.add_argument("--notsendmail", action="store_true", help="override config and do not send mail")
 parser.add_argument("--fetch", action="store_true", help="override config and fetch new signal messages")
@@ -398,16 +398,17 @@ def getmail(signalgroupid, signalnumber, deletemail):
             server.add_flags(id, ['\\FLAGGED'])
         print("Flagged mails on server.")
 
-    # send the actual signal messagesprint("Signalbot is deleting stored attachments")
-    print("Signalbot is asking signal_cli to send the message to the group, be patient ..")
-    if attachmentlist == []: # if we don't have attachments
-        os.system(signal_cli_path + ' -u ' + signalnumber + ' send -m "' + signal.encode('utf-8') + '" -g ' + signalgroupid) # + ' -a /home/pi/bin/signalbot_testing/lueftung.png')
-        print(".. done.")
-    else: # if we have attachments send them, then delete them.
-        os.system(signal_cli_path + ' -u ' + signalnumber + ' send -m "' + signal.encode('utf-8') + '" -g ' + signalgroupid + ' -a ' + ' '.join(attachmentlist))
-        print(".. done.\nSignalbot is deleting attachments.")
-        for i in attachmentlist:
-            os.remove(i)
+    # send the actual signal messages
+    if signal != "":
+        print("Signalbot is asking signal_cli to send the message to the group, be patient ..")
+        if attachmentlist == []: # if we don't have attachments
+            os.system(signal_cli_path + ' -u ' + signalnumber + ' send -m "' + signal.encode('utf-8') + '" -g ' + signalgroupid) # + ' -a /home/pi/bin/signalbot_testing/lueftung.png')
+            print(".. done.")
+        else: # if we have attachments send them, then delete them.
+            os.system(signal_cli_path + ' -u ' + signalnumber + ' send -m "' + signal.encode('utf-8') + '" -g ' + signalgroupid + ' -a ' + ' '.join(attachmentlist))
+            print(".. done.\nSignalbot is deleting stored attachments.")
+            for i in attachmentlist:
+                os.remove(i)
     if debug: print("DEBUG - getmail(): finished")
 
 # this is a ugly workaround to convert timestamps in python < 3.2, see https://stackoverflow.com/questions/26165659/python-timezone-z-directive-for-datetime-strptime-not-available#26177579
