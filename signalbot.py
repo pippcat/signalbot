@@ -86,7 +86,7 @@ if args.notgetresponse: getresponse = False
 def main():
     if debug: print("DEBUG - main(): called")
     print("Signalbot v" + version + ", Timestamp: " + str(datetime.datetime.now()))
-    print("Switch settings: debug = " + str(debug) + ", getsignalmessages = " + str(getsignalmessages) + ", sendmail = " + str(sendmail) + ", sendsms = " + str(sendsms) + ", emptydb = " + str(emptydb) + ", getmail = " + str(getmail))
+    print("Switch settings: debug = " + str(debug) + ", getsignalmessages = " + str(getsignalmessages) + ", sendmail = " + str(sendmail) + ", sendsms = " + str(sendsms) + ", emptydb = " + str(emptydb) + ", getresponse = " + str(getresponse))
     # get new signal messages:
     if getsignalmessages == True:
         print("\nSignalbot is asking signal_cli to check for new messages, be patient .. ")
