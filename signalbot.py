@@ -80,7 +80,7 @@ if args.notdebug: debug = False
 if args.emptydb: emptydb = True
 if args.notemptydb: emptydb = False
 if args.getresponse: getresponse = True
-if args.notgetrespnse: getresponse = False
+if args.notgetresponse: getresponse = False
 
 # main program:
 def main():
