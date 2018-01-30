@@ -335,25 +335,39 @@ def smssender(sendername, time, message):
 
 # looking for mail responses to send to group:
 def getmail(signalgroupid, signalnumber, deletemail):
+    '''note: since signal_cli needs a long time to do its job I decided to put
+    all new mails into one signal message instead of sending several ones.'''
+
     if debug: print("DEBUG - getmail(): called")
+
+    # variable initialization:
+    signal = ""
+    attachmentlist = []
+    matching = []
+    allmsgdict = {}
+    msgdict = {}
+
+    # connect to server and select right folder:
     server = imapclient.IMAPClient(imapserver, ssl=True)
     try:
         server.login(mailuser, mailpassword)
     except server.Error, e:
         print 'ERROR: Could not log in:', e
         sys.exit(1)
-
     server.select_folder('INBOX') # maybe implement to choose other folder?
 
-    result = server.search('UNFLAGGED') # we use the "flagged" flag to mark already processed messages
-    signal = "" # response is empty at the beginning
-    # note: since signal_cli needs a long time to do its job I decided to put all new mails into one signal message
-    # instead of sending several ones.
-    attachmentlist = [] # attachmentlist is empty as well
+    # since the "flagged" flag is used to mark already processed messages
+    # (if not deleted), we use the unflagged flag to filter for new ones:
+    result = server.search('UNFLAGGED')
 
-    # store all new messages to dictionary:
-    msgdict = {}
+    # filter those results with respect to addr_list:
     for id in result:
+        allmsgdict.update(server.fetch(id, ['BODY[HEADER.FIELDS (FROM)]']))
+        if any(x in allmsgdict[id]['BODY[HEADER.FIELDS (FROM)]'] for x in addr_list):
+            matching.append(id)
+
+    # proceed with filtered list:
+    for id in matching:
         msgdict.update(server.fetch(id, ['BODY.PEEK[]']))
 
     # do message processing:
