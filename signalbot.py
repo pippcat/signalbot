@@ -29,7 +29,7 @@ getsignalmessages = config['SWITCHES'].getboolean('getsignalmessages')
 sendmail = config['SWITCHES'].getboolean('sendmail')
 sendsms = config['SWITCHES'].getboolean('sendsms')
 emptydb = config['SWITCHES'].getboolean('emptydb')
-getmail = config['SWITCHES'].getboolean('getmail')
+getresponse = config['SWITCHES'].getboolean('getresponse')
 signalnumber = config['SIGNAL']['signalnumber']
 signalgroupid = config['SIGNAL']['signalgroupid']
 signal_cli_path = config['SIGNAL']['signal_cli_path']
@@ -65,8 +65,8 @@ parser.add_argument("--debug", action="store_true", help="override config and sw
 parser.add_argument("--notdebug", action="store_true", help="override config and switch off debug mode")
 parser.add_argument("--emptydb", action="store_true", help="override config and delete message database after processing")
 parser.add_argument("--notemptydb", action="store_true", help="override config and keep message database after processing")
-parser.add_argument("--getmail", action="store_true", help="override config and send email responses to group")
-parser.add_argument("--notgetmail", action="store_true", help="override config and do not send email responses to group")
+parser.add_argument("--getresponse", action="store_true", help="override config and send email responses to group")
+parser.add_argument("--notgetresponse", action="store_true", help="override config and do not send email responses to group")
 args=parser.parse_args()
 # override config if asked to do so:
 if args.sendmail: sendmail = True
@@ -79,8 +79,8 @@ if args.debug: debug = True
 if args.notdebug: debug = False
 if args.emptydb: emptydb = True
 if args.notemptydb: emptydb = False
-if args.getmail: getmail = True
-if args.notgetmail: getmail = False
+if args.getresponse: getresponse = True
+if args.notgetrespnse: getresponse = False
 
 # main program:
 def main():
