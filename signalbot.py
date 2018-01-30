@@ -146,9 +146,9 @@ def main():
         f.close()
 
     # check for responses via mail:
-    if getmail == True:
+    if getresponse == True:
         print("\nSignalbot is looking for mail responses")
-        getresponse(signalgroupid, signalnumber, deletemail)
+        getmail(signalgroupid, signalnumber, deletemail)
     else: print("\nSignalbot is skipping to look for mail responses")
     if debug: print("DEBUG - main(): finished")
 
@@ -334,8 +334,8 @@ def smssender(sendername, time, message):
     if debug: print("DEBUG - smssender(): finished")
 
 # looking for mail responses to send to group:
-def getresponse(signalgroupid, signalnumber, deletemail):
-    if debug: print("DEBUG - getresponse(): called")
+def getmail(signalgroupid, signalnumber, deletemail):
+    if debug: print("DEBUG - getmail(): called")
     server = imapclient.IMAPClient(imapserver, ssl=True)
     try:
         server.login(mailuser, mailpassword)
@@ -408,7 +408,7 @@ def getresponse(signalgroupid, signalnumber, deletemail):
         print(".. done.\nSignalbot is deleting attachments.")
         for i in attachmentlist:
             os.remove(i)
-    if debug: print("DEBUG - getresponse(): finished")
+    if debug: print("DEBUG - getmail(): finished")
 
 # this is a ugly workaround to convert timestamps in python < 3.2, see https://stackoverflow.com/questions/26165659/python-timezone-z-directive-for-datetime-strptime-not-available#26177579
 def dt_parse(t):
