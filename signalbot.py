@@ -89,9 +89,10 @@ def main():
     print("Switch settings: debug = " + str(debug) + ", getsignalmessages = " + str(getsignalmessages) + ", sendmail = " + str(sendmail) + ", sendsms = " + str(sendsms) + ", emptydb = " + str(emptydb) + ", getmail = " + str(getmail))
     # get new signal messages:
     if getsignalmessages == True:
-        print("Signalbot is checking for new messages")
+        print("\nSignalbot is asking signal_cli to check for new messages, be patient .. ")
         os.system(signal_cli_path + ' -u ' + signalnumber + ' receive --json > ' + os.path.dirname(__file__) + '/' + signalmsgdb)
-    else: print("Signalbot is skipping to check for new messages")
+        print(".. done.")
+    else: print("\nSignalbot is skipping to check for new messages")
 
     # parse signal messages from file into msg dict:
     msg = messagehandler(signalmsgdb)
@@ -107,9 +108,9 @@ def main():
             message = msg['message_' + str(i)]
             sendername = msg['sendername_' + str(i)]
             mailtext = "New Signal message from " + str(sendername) + " (" +str(sender) + "), sent " + str(timestamp) + ":\n" + message + "\n\n"
-            print("  ## Message " + str(i) + ":")
-            print("  " + message)
-            print("  ## end of message")
+            print("## Message " + str(i) + ":")
+            print(message)
+            print("## end of message")
             if 'attachment_' + str(i) in msg:
                 attachment = msg['attachment_' + str(i)]
             else:
@@ -117,13 +118,13 @@ def main():
 
             # send sms if activated:
             if sendsms == True:
-                print("Signalbot is sending SMS")
+                print("\nSignalbot is sending SMS")
                 smssender(sendername, time, message)
-            else: print("Signalbot is skipping to send SMS")
+            else: print("\nSignalbot is skipping to send SMS")
 
             # send mail if activated:
             if sendmail == True:
-                print("Signalbot is sending emails")
+                print("\nSignalbot is sending emails")
                 sendemail(from_addr    = mailfrom,
                       addr_list = addr_list,
                       subject      = mailsubject,
@@ -133,12 +134,12 @@ def main():
                       login        = mailuser,
                       password     = mailpassword,
                       server       = smtpserver)
-            else: print("Signalbot is skipping to send mails")
+            else: print("\nSignalbot is skipping to send mails")
 
             # deleting attachment if necessary:
             if attachment != "":
                 os.remove(attachment)
-    if newmessage == False: print("  No new messages found")
+    if newmessage == False: print("No new messages found")
     # deleting content of signal message db
     if emptydb == True:
         f = open(os.path.dirname(__file__) + '/out', 'w')
@@ -146,9 +147,9 @@ def main():
 
     # check for responses via mail:
     if getmail == True:
-        print("Signalbot is looking for mail responses")
+        print("\nSignalbot is looking for mail responses")
         getresponse(signalgroupid, signalnumber, deletemail)
-    else: print("Signalbot is skipping to look for mail responses")
+    else: print("\nSignalbot is skipping to look for mail responses")
     if debug: print("DEBUG - main(): finished")
 
 # Signal stores files without extension, we change that using the following function
@@ -346,6 +347,8 @@ def getresponse(signalgroupid, signalnumber, deletemail):
 
     result = server.search('UNFLAGGED') # we use the "flagged" flag to mark already processed messages
     signal = "" # response is empty at the beginning
+    # note: since signal_cli needs a long time to do its job I decided to put all new mails into one signal message
+    # instead of sending several ones.
     attachmentlist = [] # attachmentlist is empty as well
 
     # store all new messages to dictionary:
@@ -370,14 +373,15 @@ def getresponse(signalgroupid, signalnumber, deletemail):
                     signal += i.get_payload()
                 if ctype in ['image/jpeg', 'image/png', 'image/gif']:
                     attachmentfile = i.get_filename()
-                    print("  attachment found and stored to " + attachmentfile)
+                    print("attachment found and stored to " + attachmentfile)
                     open(attachmentfile, 'wb').write(i.get_payload(decode=True))
                     attachmentlist.append(attachmentfile)
         else:
             signal += payload
-        signal += "\n\n"
+        signal += "\n\n" # putting two new lines between messages.
+    signal = signal[0:-3] # remove the last newlines
     if msgdict != {}:
-        print("## Found new mails. The following message will be sent to group:\n")
+        print("## Found new mails. The following message will be sent to group:")
         print(signal.encode('utf-8'))
         print ("## end of message")
     else:
@@ -391,14 +395,17 @@ def getresponse(signalgroupid, signalnumber, deletemail):
         print("Deleted mails from server.")
     else: # otherwise add the flagged flag to mark that message has been processed:
         for id in result:
-            server.add_flags(message_id, ['\\FLAGGED'])
+            server.add_flags(id, ['\\FLAGGED'])
         print("Flagged mails on server.")
 
-    # send the actual signal messages
+    # send the actual signal messagesprint("Signalbot is deleting stored attachments")
+    print("Signalbot is asking signal_cli to send the message to the group, be patient ..")
     if attachmentlist == []: # if we don't have attachments
         os.system(signal_cli_path + ' -u ' + signalnumber + ' send -m "' + signal.encode('utf-8') + '" -g ' + signalgroupid) # + ' -a /home/pi/bin/signalbot_testing/lueftung.png')
+        print(".. done.")
     else: # if we have attachments send them, then delete them.
         os.system(signal_cli_path + ' -u ' + signalnumber + ' send -m "' + signal.encode('utf-8') + '" -g ' + signalgroupid + ' -a ' + ' '.join(attachmentlist))
+        print(".. done.\nSignalbot is deleting attachments.")
         for i in attachmentlist:
             os.remove(i)
     if debug: print("DEBUG - getresponse(): finished")
