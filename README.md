@@ -2,6 +2,10 @@
 
 Signalbot is a Python script which can send Signal messages via Email and/or SMS (using www.clockworksms.com API). It's relying on signal-cli (https://github.com/AsamK/signal-cli) to fetch the actual messages. Configuration is done in by renaming config_default.ini to config.ini and modifying it.
 
+## Warning
+
+This script is only tested on a Raspberry Pi 2 running Raspbian Jessie, Python 2.7.9 and signal_cli 0.5.6. Your results may vary. Feel free to try and help me improve it.
+
 ## CLI arguments
 
 You may pass the following arguments to signalbot.py to overwrite defaults set in config.ini:
@@ -23,11 +27,13 @@ You may pass the following arguments to signalbot.py to overwrite defaults set i
 
 - SMS module doesn't check for length of messages
 - Messages from other contacts or groups will still be downloaded and then be lost.
+- atm other mail users don't get informed about messages sent to signalbot via mail and then piped into signal group
 
 ## ToDos
 
 - add possibility to choose between multiple groups to be forwarded to different recipients
 - check message length and split into multiple sms if necessary
+- send a mail to all users which did not answer via signalbot into the group, otherwise they'll never know about the answer.
 
 ## Changelog
 
