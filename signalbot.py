@@ -366,6 +366,7 @@ def getmail(signalgroupid, signalnumber, deletemail):
         if any(x in allmsgdict[id]['BODY[HEADER.FIELDS (FROM)]'] for x in addr_list):
             matching.append(id)
 
+    print matching
     # proceed with filtered list:
     for id in matching:
         msgdict.update(server.fetch(id, ['BODY.PEEK[]']))
