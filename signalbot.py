@@ -366,7 +366,6 @@ def getmail(signalgroupid, signalnumber, deletemail):
         if any(x in allmsgdict[id]['BODY[HEADER.FIELDS (FROM)]'] for x in addr_list.split(",")):
             matching.append(id)
 
-    print matching
     # proceed with filtered list:
     for id in matching:
         msgdict.update(server.fetch(id, ['BODY.PEEK[]']))
@@ -402,19 +401,31 @@ def getmail(signalgroupid, signalnumber, deletemail):
     else:
         print("No new mails found on server.")
 
-    # take care of messages afterwards:
-    if deletemail == True: # delete mail after processing if asked to do so:
-        for id in matching:
-            server.delete_messages(id)
-            server.expunge()
-        print("Deleted mails from server.")
-    else: # otherwise add the flagged flag to mark that message has been processed:
-        for id in matching:
-            server.add_flags(id, ['\\FLAGGED'])
-        print("Flagged mails on server.")
-
-    # send the actual signal messages
+    # send the actual messages and take care of received mails on server
     if signal != "":
+        if deletemail == True: # delete mail after processing if asked to do so:
+            for id in matching:
+                server.delete_messages(id)
+                server.expunge()
+            print("Deleted mails from server.")
+        else: # otherwise add the flagged flag to mark that message has been processed:
+            for id in matching:
+                server.add_flags(id, ['\\FLAGGED'])
+            print("Flagged mails on server.")
+
+        # informing non signal users about message
+        print("\nSignalbot is informing other non Signal user via mail about the new message")
+        sendemail(from_addr    = mailfrom,
+              addr_list = addr_list,
+              subject      = "Signalbot is sending message to group",
+              message      = signal.encode("utf-8"),
+              attachment   = "", #attachmentlist # uh-oh, we have a list here but function is expecting a string
+              timestamp    = datetime.datetime.now(),
+              login        = mailuser,
+              password     = mailpassword,
+              server       = smtpserver)
+
+        # sending message to signal group
         print("Signalbot is asking signal_cli to send the message to the group, be patient ..")
         if attachmentlist == []: # if we don't have attachments
             os.system(signal_cli_path + ' -u ' + signalnumber + ' send -m "' + signal.encode('utf-8') + '" -g ' + signalgroupid)
@@ -424,6 +435,7 @@ def getmail(signalgroupid, signalnumber, deletemail):
             print(".. done.\nSignalbot is deleting stored attachments.")
             for i in attachmentlist:
                 os.remove(i)
+
     if debug: print("DEBUG - getmail(): finished")
 
 # this is a ugly workaround to convert timestamps in python < 3.2, see https://stackoverflow.com/questions/26165659/python-timezone-z-directive-for-datetime-strptime-not-available#26177579

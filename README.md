@@ -22,15 +22,18 @@ You may pass the following arguments to signalbot.py to overwrite defaults set i
 ## Known issues
 
 - SMS module doesn't check for length of messages
-- Messages from other contacts or groups will still be downloaded and then be lost.
+- Mail informing non Signal user about new messages from other non Signal users doesn't support attachments yet
 
 ## ToDos
 
 - add possibility to choose between multiple groups to be forwarded to different recipients
+- reworking sendmail() function to support a list of attachments
+- support more MIMEtypes in getmail()
 - check message length and split into multiple sms if necessary
 
 ## Changelog
 
+- 0.6.1 - email responses from non signal users will be sent by mail to other non signal users too
 - 0.6   - bot now checks for email responses and sends them to signal group
 - 0.5.2 - code clean up
 - 0.5.1 - added timestamp to mail header
