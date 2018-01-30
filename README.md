@@ -4,7 +4,7 @@ Signalbot is a Python script which can send Signal messages via Email and/or SMS
 
 ## Response branch
 
-Email recipients should be able to answer to the signalbot in order for him to pipe the answer back to the group. That's what this branch tries to accomplish. It doesn't work very good yet, though..
+Email recipients should be able to answer to the signalbot in order for him to pipe the answer back to the group. It's kind of working but still needs some love.
 
 ## Warning
 

@@ -86,14 +86,14 @@ if args.notgetmail: getmail = False
 def main():
     if debug: print("DEBUG - main(): called")
     print("Signalbot v" + version + ", Timestamp: " + str(datetime.datetime.now()))
-    print("Switch settings: Debug = " + str(debug) + ", getsignalmessages = " + str(getsignalmessages) + ", sendmail = " + str(sendmail) + ", sendsms = " + str(sendsms) + ", emptydb = " + str(emptydb) + ", getmail = " + str(getmail))
+    print("Switch settings: debug = " + str(debug) + ", getsignalmessages = " + str(getsignalmessages) + ", sendmail = " + str(sendmail) + ", sendsms = " + str(sendsms) + ", emptydb = " + str(emptydb) + ", getmail = " + str(getmail))
     # get new signal messages:
     if getsignalmessages == True:
         print("Signalbot is checking for new messages")
-        os.system(signal_cli_path + ' -u ' + signalnumber + ' receive --json > ' + os.path.dirname(__file__) + '/out')
+        os.system(signal_cli_path + ' -u ' + signalnumber + ' receive --json > ' + os.path.dirname(__file__) + '/' + signalmsgdb)
+    else: print("Signalbot is skipping to check for new messages")
 
     # parse signal messages from file into msg dict:
-    print("Signalbot is parsing new messages")
     msg = messagehandler(signalmsgdb)
 
     # formatting msg dict:
@@ -107,9 +107,9 @@ def main():
             message = msg['message_' + str(i)]
             sendername = msg['sendername_' + str(i)]
             mailtext = "New Signal message from " + str(sendername) + " (" +str(sender) + "), sent " + str(timestamp) + ":\n" + message + "\n\n"
-            print("## Message " + str(i) + ":")
-            print(message)
-            print("## end of message")
+            print("  ## Message " + str(i) + ":")
+            print("  " + message)
+            print("  ## end of message")
             if 'attachment_' + str(i) in msg:
                 attachment = msg['attachment_' + str(i)]
             else:
@@ -117,7 +117,9 @@ def main():
 
             # send sms if activated:
             if sendsms == True:
+                print("Signalbot is sending SMS")
                 smssender(sendername, time, message)
+            else: print("Signalbot is skipping to send SMS")
 
             # send mail if activated:
             if sendmail == True:
@@ -131,12 +133,12 @@ def main():
                       login        = mailuser,
                       password     = mailpassword,
                       server       = smtpserver)
+            else: print("Signalbot is skipping to send mails")
 
             # deleting attachment if necessary:
             if attachment != "":
-                print(attachment)
                 os.remove(attachment)
-    if newmessage == False: print("No new messages - exiting.")
+    if newmessage == False: print("  No new messages found")
     # deleting content of signal message db
     if emptydb == True:
         f = open(os.path.dirname(__file__) + '/out', 'w')
@@ -144,7 +146,9 @@ def main():
 
     # check for responses via mail:
     if getmail == True:
+        print("Signalbot is looking for mail responses")
         getresponse(signalgroupid, signalnumber, deletemail)
+    else: print("Signalbot is skipping to look for mail responses")
     if debug: print("DEBUG - main(): finished")
 
 # Signal stores files without extension, we change that using the following function
@@ -253,7 +257,7 @@ def messagehandler(file):
                         jattachmentfile = '0'
 
                 else:
-                    print("Signalbot did not find new messages to send, aborting!")
+                    print("  Signalbot did not find new messages to send")
         else:
             if debug: print("DEBUG - messagehandler(): no entry in message database")
             message['error_' + str(i)] = "no entry in database"
@@ -311,7 +315,7 @@ def sendemail(from_addr, addr_list, subject, message, attachment, timestamp, log
 
 # Sending SMS:
 def smssender(sendername, time, message):
-    print("Signalbot is sending SMS")
+    if debug: print("DEBUG - smssender(): called")
     sms_rec_list = str(sms_receivers).split(",")
     api = clockwork.API(clockworkapikey)
     smsmsg = sendername + ", " + unicode(time) + ": " + message
@@ -326,21 +330,23 @@ def smssender(sendername, time, message):
         else:
             print (response.error_code)
             print (response.error_message)
+    if debug: print("DEBUG - smssender(): finished")
 
 # looking for mail responses to send to group:
 def getresponse(signalgroupid, signalnumber, deletemail):
-    print("Signalbot is looking for mail responses")
+    if debug: print("DEBUG - getresponse(): called")
     server = imapclient.IMAPClient(imapserver, ssl=True)
     try:
         server.login(mailuser, mailpassword)
     except server.Error, e:
-        print 'Could not log in:', e
+        print 'ERROR: Could not log in:', e
         sys.exit(1)
 
     server.select_folder('INBOX') # maybe implement to choose other folder?
 
     result = server.search('UNFLAGGED') # we use the "flagged" flag to mark already processed messages
     signal = "" # response is empty at the beginning
+    attachmentlist = [] # attachmentlist is empty as well
 
     # store all new messages to dictionary:
     msgdict = {}
@@ -364,34 +370,48 @@ def getresponse(signalgroupid, signalnumber, deletemail):
                     signal += i.get_payload()
                 if ctype in ['image/jpeg', 'image/png', 'image/gif']:
                     attachmentfile = i.get_filename()
-                    print("attachment stored to " + attachmentfile)
+                    print("  attachment found and stored to " + attachmentfile)
                     open(attachmentfile, 'wb').write(i.get_payload(decode=True))
+                    attachmentlist.append(attachmentfile)
         else:
             signal += payload
         signal += "\n\n"
-        print("Found new mails. The following message will be sent to group:\n")
+    if msgdict != {}:
+        print("## Found new mails. The following message will be sent to group:\n")
         print(signal.encode('utf-8'))
-        os.system(signal_cli_path + ' -u ' + signalnumber + ' send -m "' + signal.encode('utf-8') + '" -g ' + signalgroupid) # + ' -a /home/pi/bin/signalbot_testing/lueftung.png')
+        print ("## end of message")
+    else:
+        print("No new mails found on server.")
 
     # take care of messages afterwards:
-    for id in result:
-        # delete mail after processing if asked to do so:
-        if deletemail == True:
+    if deletemail == True: # delete mail after processing if asked to do so:
+        for id in result:
             server.delete_messages(id)
             server.expunge()
-            print "Deleted mails from server."
-        # otherwise add the flagged flag to mark that message has been processed:
-        else:
+        print("Deleted mails from server.")
+    else: # otherwise add the flagged flag to mark that message has been processed:
+        for id in result:
             server.add_flags(message_id, ['\\FLAGGED'])
-            print "Flagged mails on server."
+        print("Flagged mails on server.")
+
+    # send the actual signal messages
+    if attachmentlist == []: # if we don't have attachments
+        os.system(signal_cli_path + ' -u ' + signalnumber + ' send -m "' + signal.encode('utf-8') + '" -g ' + signalgroupid) # + ' -a /home/pi/bin/signalbot_testing/lueftung.png')
+    else: # if we have attachments send them, then delete them.
+        os.system(signal_cli_path + ' -u ' + signalnumber + ' send -m "' + signal.encode('utf-8') + '" -g ' + signalgroupid + ' -a ' + ' '.join(attachmentlist))
+        for i in attachmentlist:
+            os.remove(i)
+    if debug: print("DEBUG - getresponse(): finished")
 
 # this is a ugly workaround to convert timestamps in python < 3.2, see https://stackoverflow.com/questions/26165659/python-timezone-z-directive-for-datetime-strptime-not-available#26177579
 def dt_parse(t):
+    if debug: print("DEBUG - dt_parse(): called")
     ret = datetime.datetime.strptime(t[0:24],'%a, %d %b %Y %H:%M:%S') #e.g: Fri, 26 Jan 2018 12:36:52 +0100
     if t[26]=='+':
         ret-=datetime.timedelta(hours=int(t[27:29]),minutes=int(t[29:]))
     elif t[26]=='-':
         ret+=datetime.timedelta(hours=int(t[27:29]),minutes=int(t[29:]))
+    if debug: print("DEBUG - dt_parse(): finished")
     return ret
 
 if __name__ == '__main__':
