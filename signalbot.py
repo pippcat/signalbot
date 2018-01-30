@@ -363,7 +363,7 @@ def getmail(signalgroupid, signalnumber, deletemail):
     # filter those results with respect to addr_list:
     for id in result:
         allmsgdict.update(server.fetch(id, ['BODY[HEADER.FIELDS (FROM)]']))
-        if (x in allmsgdict[id]['BODY[HEADER.FIELDS (FROM)]'] for x in addr_list):
+        if any(x in allmsgdict[id]['BODY[HEADER.FIELDS (FROM)]'] for x in addr_list):
             matching.append(id)
 
     print matching
