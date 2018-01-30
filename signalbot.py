@@ -42,6 +42,7 @@ smtpserver = config['MAIL']['smtpserver']
 imapserver = config['MAIL']['imapserver']
 mailuser = config['MAIL']['mailuser']
 mailpassword = config['MAIL']['mailpassword']
+deletemail = config['MAIL'].getboolean('deletemail')
 max_attachmentsize = config['MAIL']['max_attachmentsize']
 sms_receivers = config['SMS']['sms_receivers']
 clockworkapikey = config['SMS']['clockworkapikey']
@@ -143,7 +144,7 @@ def main():
 
     # check for responses via mail:
     if getmail == True:
-        getresponse()
+        getresponse(signalgroupid, signalnumber, deletemail)
     if debug: print("DEBUG - main(): finished")
 
 # Signal stores files without extension, we change that using the following function
@@ -327,20 +328,26 @@ def smssender(sendername, time, message):
             print (response.error_message)
 
 # looking for mail responses to send to group:
-def getresponse():
+def getresponse(signalgroupid, signalnumber, deletemail):
     print("Signalbot is looking for mail responses")
     server = imapclient.IMAPClient(imapserver, ssl=True)
     try:
         server.login(mailuser, mailpassword)
-    except c.Error, e:
+    except server.Error, e:
         print 'Could not log in:', e
         sys.exit(1)
 
-    # maybe implement to choose other folder?
-    select_info = server.select_folder('INBOX')
-    #print('%d messages in INBOX' % select_info[b'EXISTS'])
-    msgdict = server.fetch('1:*', ['BODY.PEEK[]'])
-    signal = ""
+    server.select_folder('INBOX') # maybe implement to choose other folder?
+
+    result = server.search('UNFLAGGED') # we use the "flagged" flag to mark already processed messages
+    signal = "" # response is empty at the beginning
+
+    # store all new messages to dictionary:
+    msgdict = {}
+    for id in result:
+        msgdict.update(server.fetch(id, ['BODY.PEEK[]']))
+
+    # do message processing:
     for message_id, message in msgdict.items():
         e = email.message_from_string(message['BODY[]'])
         nicetime = dt_parse(e['Date'])
@@ -362,11 +369,23 @@ def getresponse():
         else:
             signal += payload
         signal += "\n\n"
-    #os.system(signal_cli_path + ' -u ' + signalnumber + ' send -m "' + signal.encode('utf-8') + '" -g ' + signalgroupid) # + ' -a /home/pi/bin/signalbot_testing/lueftung.png')
-    print("Found new mails. The following message will be sent to group:\n")
-    print(signal.encode('utf-8'))
+        print("Found new mails. The following message will be sent to group:\n")
+        print(signal.encode('utf-8'))
+        os.system(signal_cli_path + ' -u ' + signalnumber + ' send -m "' + signal.encode('utf-8') + '" -g ' + signalgroupid) # + ' -a /home/pi/bin/signalbot_testing/lueftung.png')
 
-# this is a ugly workaround to convert timestamps in python > 3.2, see https://stackoverflow.com/questions/26165659/python-timezone-z-directive-for-datetime-strptime-not-available#26177579
+    # take care of messages afterwards:
+    for id in result:
+        # delete mail after processing if asked to do so:
+        if deletemail == True:
+            server.delete_messages(id)
+            server.expunge()
+            print "Deleted mails from server."
+        # otherwise add the flagged flag to mark that message has been processed:
+        else:
+            server.add_flags(message_id, ['\\FLAGGED'])
+            print "Flagged mails on server."
+
+# this is a ugly workaround to convert timestamps in python < 3.2, see https://stackoverflow.com/questions/26165659/python-timezone-z-directive-for-datetime-strptime-not-available#26177579
 def dt_parse(t):
     ret = datetime.datetime.strptime(t[0:24],'%a, %d %b %Y %H:%M:%S') #e.g: Fri, 26 Jan 2018 12:36:52 +0100
     if t[26]=='+':
