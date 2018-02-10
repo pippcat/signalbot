@@ -35,6 +35,7 @@ You may pass the following arguments to signalbot.py to overwrite defaults set i
 - support more MIMEtypes in getmail()
 - check message length and split into multiple sms if necessary
 - add filter which removes cited part of email response to group
+- add archive function to bot
 
 ## Changelog
 
