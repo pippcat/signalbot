@@ -150,6 +150,7 @@ def main():
         print("\nSignalbot is looking for mail responses")
         getmail(signalgroupid, signalnumber, deletemail)
     else: print("\nSignalbot is skipping to look for mail responses")
+    print("\n#### Everything done. ####\n\n")
     if debug: print("DEBUG - main(): finished")
 
 # Signal stores files without extension, we change that using the following function
