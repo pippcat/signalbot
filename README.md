@@ -27,6 +27,7 @@ You may pass the following arguments to signalbot.py to overwrite defaults set i
 
 - SMS module doesn't check for length of messages
 - Mail informing non Signal user about new messages from other non Signal users doesn't support attachments yet
+- users are untrusted if they reinstall signal and therefore messages don't come through. As a workaround you can manually trust the new key using signal cli: `signal-cli -u yourNumber trust -a untrustedNumber`
 
 ## ToDos
 
@@ -34,6 +35,8 @@ You may pass the following arguments to signalbot.py to overwrite defaults set i
 - reworking sendmail() function to support a list of attachments
 - support more MIMEtypes in getmail()
 - check message length and split into multiple sms if necessary
+- add filter which removes cited part of email response to group
+- add archive function to bot
 
 ## Changelog
 
